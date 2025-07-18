@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import '../models/model_manager.dart';
 import '../models/chat_session.dart';
 import '../helpers/event_bus.dart';
+import '../services/termux_service.dart';
 
 final FEED_IMAGE_SIZE = 200.0;
 
@@ -18,13 +19,14 @@ class MainProvider with ChangeNotifier {
   final _prefs = SharedPreferencesAsync();
   PackageInfo? _packageInfo;
   QDatabase qdb = QDatabase();
+  final TermuxService _termuxService = TermuxService();
 
   bool isInitialized = false;
   bool serveConnected = false;
   String version = "1.0.0";
   int buildNumber = 0;
 
-  String baseUrl = "http://192.168.0.1:11434";
+  String baseUrl = "http://localhost:8080";
   Map<String, ChatSession> activeSessions = {};
   List<Model>? modelList;
   String? selectedModel;
@@ -36,6 +38,15 @@ class MainProvider with ChangeNotifier {
   //--------------------------------------------------------------------------//
   Future<void> initialize() async {
     await loadPreferences();
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final isInstalled = await _termuxService.isTermuxInstalled();
+      if (isInstalled) {
+        await _termuxService.launchTermuxAndRunScript();
+        await Future.delayed(const Duration(seconds: 10));
+      } else {
+        // TODO: show dialog to install termux
+      }
+    }
     await checkServerConnection();
     await _initPackageInfo();
     await qdb.init();
