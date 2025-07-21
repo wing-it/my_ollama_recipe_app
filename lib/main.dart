@@ -107,7 +107,10 @@ class _InitializationWrapperState extends State<InitializationWrapper> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 20),
-                  Text('Initializing...').tr(),
+                  Text(provider.serveConnected
+                          ? 'Initializing...'
+                          : 'Setting up local server...')
+                      .tr(),
                 ],
               ),
             ),
